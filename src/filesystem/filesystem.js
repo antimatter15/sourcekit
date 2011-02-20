@@ -23,18 +23,35 @@ define("filesystem/filesystem", ["dropbox/dropbox"], function(Dropbox) {
       return hash;
     }
     
-    var failsafe = function(){};
+    var failsafe = [];
     var old_getDirectoryContents = db.getDirectoryContents;
     db.getDirectoryContents = function(path, callback){
-      failsafe = function(){
+      failsafe.push(function(){
+        console.log('dir contents', path);
         var files = [];
         var hash = getFileHash();
+        var directories = [];
         for(var i in hash){
           var data = localStorage.getItem(hash[i].key);
           var date = new Date();
           date.setTime(hash[i].time);
-          
-          files.push({"revision": 1337, 
+          if(i.indexOf(path) == 0){
+            var x2 = i.substr(path.length).replace(/^\/+/,'');
+            //console.log('_',x2);
+            if(x2.indexOf('/') != -1){
+              var dirpath = x2.split('/')[0];
+              if(directories.indexOf(dirpath) == -1){
+                directories.push(dirpath);
+                //console.log('/'+(path+'/'+dirpath).replace(/^\/+/,''));
+                files.push({"revision": 1337, 
+                      "thumb_exists": false, 
+                      "bytes": 0, 
+                      "path": '/'+(path+'/'+dirpath).replace(/^\/+/,''), 
+                      "is_dir": true
+                      })
+              }
+            }else{
+              files.push({"revision": 1337, 
                       "thumb_exists": false, 
                       "bytes": data.length, 
                       "modified": date.toString(), 
@@ -44,24 +61,26 @@ define("filesystem/filesystem", ["dropbox/dropbox"], function(Dropbox) {
                       "mime_type": "application/octet-stream", 
                       "size": data.length+"B"
                       })
+            }
+          }
         }
         callback({
           is_dir: true,
           path: "",
           contents: files
         })
-      }
+      })
       old_getDirectoryContents.call(this, path, callback);
     }
     
     var old_getFileContents = db.getFileContents;
     db.getFileContents = function(path, callback){
-      failsafe = function(){
+      failsafe.push(function(){
         //callback(localStorage.getItem('_file_' + (+new Date) + '___'+  path));
         callback(localStorage.getItem(getFileHash()[path].key))
-      };
+      });
       if(localStorage.getItem('_edited_'+path) && confirm("The file '"+path+"' appears to have been edited while offline, would you like to load the offline version? Otherwise the locally cached version of the file will be LOST.")){
-        return failsafe();
+        return failsafe.pop()();
       }
       old_getFileContents.call(this, path, function(data){
         localStorage.setItem('_file_' + (+new Date) + '___'+  path, data);
@@ -72,18 +91,19 @@ define("filesystem/filesystem", ["dropbox/dropbox"], function(Dropbox) {
     var old_putFileContents = db.putFileContents;
     db.putFileContents = function(path, content, callback){
       localStorage.setItem('_file_' + (+new Date) + '___'+ path, content);
-      failsafe = function(){
+      failsafe.push(function(){
         localStorage.setItem('_edited_'+path, +new Date);
-      }; //do nothing.
+      }); //do nothing.
       localStorage.removeItem('_edited_'+path);
       old_putFileContents.call(this, path, content, callback);
     }
     
     db.errorHandler = function(data){
-      console.log('woot an awesome errurh');
+      console.log('Using Offline Fallback',data);
       document.body.style.backgroundColor = '#ffdddd'; //this is a sort of subtle offline indication
-      failsafe(); 
-      failsafe = function(){};
+      
+      var fs = failsafe.pop();
+      fs && fs();
     }
     return db;
   }
