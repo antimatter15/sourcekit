@@ -1,4 +1,4 @@
-define('sourcekit/application', ['dropbox/dropbox', 'sourcekit/editor', 'sourcekit/filelist'], function (Dropbox, Editor, FileList) {
+define('sourcekit/application', ['filesystem/filesystem', 'sourcekit/editor', 'sourcekit/filelist'], function (Dropbox, Editor, FileList) {
 
 dojo.require("dijit.layout.ContentPane");
 dojo.require("dijit.layout.BorderContainer");

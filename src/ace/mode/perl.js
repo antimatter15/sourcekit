@@ -19,8 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *      Fabian Jakobs <fabian AT ajax DOT org>
- *      Gastón Kleiman <gaston.kleiman AT gmail DOT com>
+ *      Panagiotis Astithas <pastith AT gmail DOT com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,12 +40,12 @@ define(function(require, exports, module) {
 var oop = require("pilot/oop");
 var TextMode = require("ace/mode/text").Mode;
 var Tokenizer = require("ace/tokenizer").Tokenizer;
-var c_cppHighlightRules = require("ace/mode/c_cpp_highlight_rules").c_cppHighlightRules;
+var PerlHighlightRules = require("ace/mode/perl_highlight_rules").PerlHighlightRules;
 var MatchingBraceOutdent = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent;
 var Range = require("ace/range").Range;
 
 var Mode = function() {
-    this.$tokenizer = new Tokenizer(new c_cppHighlightRules().getRules());
+    this.$tokenizer = new Tokenizer(new PerlHighlightRules().getRules());
     this.$outdent = new MatchingBraceOutdent();
 };
 oop.inherits(Mode, TextMode);
@@ -56,7 +55,7 @@ oop.inherits(Mode, TextMode);
     this.toggleCommentLines = function(state, doc, startRow, endRow) {
         var outdent = true;
         var outentedRows = [];
-        var re = /^(\s*)\/\//;
+        var re = /^(\s*)#/;
 
         for (var i=startRow; i<= endRow; i++) {
             if (!re.test(doc.getLine(i))) {
@@ -78,7 +77,7 @@ oop.inherits(Mode, TextMode);
             }
         }
         else {
-            doc.indentRows(startRow, endRow, "//");
+            doc.indentRows(startRow, endRow, "#");
         }
     };
 
@@ -94,20 +93,9 @@ oop.inherits(Mode, TextMode);
         }
 
         if (state == "start") {
-            var match = line.match(/^.*[\{\(\[]\s*$/);
+            var match = line.match(/^.*[\{\(\[\:]\s*$/);
             if (match) {
                 indent += tab;
-            }
-        } else if (state == "doc-start") {
-            if (endState == "start") {
-                return "";
-            }
-            var match = line.match(/^\s*(\/?)\*/);
-            if (match) {
-                if (match[1]) {
-                    indent += " ";
-                }
-                indent += "* ";
             }
         }
 

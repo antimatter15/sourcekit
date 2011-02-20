@@ -5,7 +5,7 @@ var lang = require("pilot/lang");
 var DocCommentHighlightRules = require("ace/mode/doc_comment_highlight_rules").DocCommentHighlightRules;
 var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
 
-JavaHighlightRules = function() {
+var JavaHighlightRules = function() {
 
     var docComment = new DocCommentHighlightRules();
 
@@ -22,7 +22,7 @@ JavaHighlightRules = function() {
 	"class|finally|long|strictfp|volatile|" +
 	"const|float|native|super|while").split("|")
     );
-    
+
     var buildinConstants = lang.arrayToMap(
         ("null|Infinity|NaN|undefined").split("|")
     );
@@ -68,9 +68,9 @@ JavaHighlightRules = function() {
 	            token : function(value) {
 	                if (value == "this")
 	                    return "variable.language";
-	                else if (keywords[value])
+	                else if (keywords.hasOwnProperty(value))
 	                    return "keyword";
-	                else if (buildinConstants[value])
+	                else if (buildinConstants.hasOwnProperty(value))
 	                    return "constant.language";
 	                else
 	                    return "identifier";

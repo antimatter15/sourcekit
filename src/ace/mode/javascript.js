@@ -69,16 +69,16 @@ oop.inherits(Mode, TextMode);
             var deleteRange = new Range(0, 0, 0, 0);
             for (var i=startRow; i<= endRow; i++)
             {
-                var line = doc.getLine(i).replace(re, "$1");
+                var line = doc.getLine(i);
+                var m = line.match(re);
                 deleteRange.start.row = i;
                 deleteRange.end.row = i;
-                deleteRange.end.column = line.length + 2;
-                doc.replace(deleteRange, line);
+                deleteRange.end.column = m[0].length;
+                doc.replace(deleteRange, m[1]);
             }
-            return -2;
         }
         else {
-            return doc.indentRows(startRow, endRow, "//");
+            doc.indentRows(startRow, endRow, "//");
         }
     };
 
@@ -119,12 +119,12 @@ oop.inherits(Mode, TextMode);
     };
 
     this.autoOutdent = function(state, doc, row) {
-        return this.$outdent.autoOutdent(doc, row);
+        this.$outdent.autoOutdent(doc, row);
     };
     
     this.createWorker = function(session) {
         var doc = session.getDocument();
-        var worker = new WorkerClient("../..", ["ace", "pilot"], "worker-javascript.js", "ace/mode/javascript_worker", "JavaScriptWorker");
+        var worker = new WorkerClient(["ace", "pilot"], "worker-javascript.js", "ace/mode/javascript_worker", "JavaScriptWorker");
         worker.call("setValue", [doc.getValue()]);
         
         doc.on("change", function(e) {

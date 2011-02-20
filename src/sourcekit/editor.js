@@ -7,7 +7,22 @@ define('sourcekit/editor',
         'ace/edit_session',
         'ace/undomanager',
         'ace/virtual_renderer', 
+        
         'ace/theme/twilight',
+        'ace/theme/clouds',
+        'ace/theme/clouds_midnight',
+        'ace/theme/cobalt',
+        'ace/theme/dawn',
+        'ace/theme/eclipse',
+        'ace/theme/idle_fingers',
+        'ace/theme/kr_theme',
+        'ace/theme/mono_industrial',
+        'ace/theme/monokai',
+        'ace/theme/pastel_on_dark',
+        'ace/theme/textmate',
+        
+        'ace/keyboard/keybinding/vim',
+        'ace/keyboard/keybinding/emacs',
         
         'ace/mode/c_cpp',
         'ace/mode/css',
@@ -19,6 +34,7 @@ define('sourcekit/editor',
         'ace/mode/ruby',
         'ace/mode/text',
         'ace/mode/xml',
+        'ace/mode/coffee',
         ], 
         function(FileUtil, Notification, FileModeMapping) {
 
@@ -35,10 +51,13 @@ var Renderer = require("ace/virtual_renderer").VirtualRenderer;
 var theme = require("ace/theme/twilight");
 var blankSession = new AceEditSession("");
 
+
+
 var Editor = function(dropbox, editorEnv) {
     this.dropbox = dropbox;
     this.sessions = {};
     dojo.addOnLoad(this.setupInterface.bind(this));
+    
 };
 
 Editor.prototype.setupInterface = function() {
@@ -51,7 +70,7 @@ Editor.prototype.setupInterface = function() {
     dojo.connect(window, "onresize", this.resize.bind(this));
     
     dojo.connect(window, "onkeydown", (function(keyEvent) {
-        if (keyEvent.keyCode == 83 && keyEvent.metaKey) {
+        if (keyEvent.keyCode == 83 && (keyEvent.metaKey || keyEvent.ctrlKey)) {
             
             this.saveCurrentFile();
             dojo.stopEvent(keyEvent);
@@ -62,9 +81,11 @@ Editor.prototype.setupInterface = function() {
 // Commands (called by application code)
 Editor.prototype.openFile = function(item) {
     // TODO ADD WELCOME PAGE 
-    
     this.introContainer.style.display = "none";
     
+    if(item.bytes > 1024 * 1024 && !confirm("This file is "+item.size+", are you sure you want to open it?")){
+      return;
+    }
     if (this.tabContainer == null) {
         this.tabContainer = new dijit.layout.TabContainer({
            id: "editorTabContainer",
@@ -117,7 +138,7 @@ Editor.prototype.openFile = function(item) {
         });
         
         // Save Button
-        saveButton = new dijit.form.Button({
+        var saveButton = new dijit.form.Button({
             label: "Save",
             showLabel: true,
             iconClass: "dijitIconSave",
@@ -125,6 +146,35 @@ Editor.prototype.openFile = function(item) {
         });
         
         editorToolbar.addChild(saveButton);
+        
+        // Open Button
+        var openButton = new dijit.form.Button({
+            label: "Open in browser",
+            showLabel: true,
+            iconClass: "dijitIconApplication",
+            onClick: (function(){
+              var currentSession = this.sessions[this.tabContainer.selectedChildWidget.id];
+              var content = currentSession.toString();
+              var bb = new BlobBuilder();
+              bb.append(content);
+              var file = bb.getBlob('text/html'), url = '';
+              if(window.createObjectURL){
+                url = window.createObjectURL(file)
+              }else if(window.createBlobURL){
+                url = window.createBlobURL(file)
+              }else if(window.URL && window.URL.createObjectURL){
+                url = window.URL.createObjectURL(file)
+              }else if(window.webkitURL && window.webkitURL.createObjectURL){
+                url = window.webkitURL.createObjectURL(file)
+              }
+              
+              console.log(url);
+              window.open(url);
+            }).bind(this)
+        });
+        
+        editorToolbar.addChild(openButton);
+        
         
         // Handle file type autodetection
         var extension = FileUtil.fileExtension(item.path);
@@ -141,6 +191,53 @@ Editor.prototype.openFile = function(item) {
         });
         
         editorToolbar.addChild(modeSelect);
+        
+        // Add Theme Select Dropdown Menu
+        var themeSelect = new dijit.form.Select({
+            options: [
+              {label: 'Twilight', value: 'twilight'},
+              {label: 'TextMate', value: 'textmate'},
+              {label: 'Eclipse', value: 'eclipse'},
+              {label: 'idleFingers', value: 'idle_fingers'},
+              {label: 'Dawn', value: 'dawn'},
+              {label: 'Pastel on dark', value: 'pastel_on_dark'},
+              {label: 'Clouds', value: 'clouds'},
+              {label: 'Midnight clouds', value: 'clouds_midnight'},
+              {label: 'Cobalt', value: 'cobalt'},
+              {label: 'Mono Industrial', value: 'mono_industrial'},
+              {label: 'Monokai', value: 'monokai'},
+            ],
+            onChange: (function(newValue) {
+                this.editor.setTheme('ace/theme/' + newValue);
+                localStorage.theme = newValue;
+            }).bind(this)
+        });
+        
+        themeSelect.setValue(localStorage.theme || 'twilight')
+        
+        editorToolbar.addChild(themeSelect);
+        
+        // Add Keybinding Select Dropdown Menu
+        var bindingSelect = new dijit.form.Select({
+            options: [
+              {label: 'Normal', value: 'ace'},
+              {label: 'Vim', value: 'vim'},
+              {label: 'Emacs', value: 'emacs'},
+            ],
+            onChange: (function(newValue) {
+              var keybindings = {
+                ace: null,
+                vim: require("ace/keyboard/keybinding/vim").Vim,
+                emacs: require("ace/keyboard/keybinding/emacs").Emacs
+              };
+              this.editor.setKeyboardHandler(keybindings[newValue]);
+              localStorage.keybinding = newValue;
+            }).bind(this)
+        });
+        
+        bindingSelect.setValue(localStorage.theme || 'ace')
+        
+        editorToolbar.addChild(bindingSelect);
         
         editorContentPane.domNode.appendChild(editorToolbar.domNode);
 

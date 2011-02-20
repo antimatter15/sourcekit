@@ -42,7 +42,7 @@ var oop = require("pilot/oop");
 var lang = require("pilot/lang");
 var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
 
-RubyHighlightRules = function() {
+var RubyHighlightRules = function() {
 
     var builtinFunctions = lang.arrayToMap(
         ("abort|Array|at_exit|autoload|binding|block_given?|callcc|caller|catch|chomp|chomp!|chop|chop!|eval|exec|exit|exit!" +
@@ -56,7 +56,7 @@ RubyHighlightRules = function() {
         ("alias|and|BEGIN|begin|break|case|class|def|defined|do|else|elsif|END|end|ensure|__FILE__|finally|for|" +
         "if|in|__LINE__|module|next|not|or|redo|rescue|retry|return|super|then|undef|unless|until|when|while|yield").split("|")
     );
-    
+
     var buildinConstants = lang.arrayToMap(
         ("true|TRUE|false|FALSE|nil|NIL|ARGF|ARGV|DATA|ENV|RUBY_PLATFORM|RUBY_RELEASE_DATE|RUBY_VERSION|STDERR|STDIN|STDOUT|TOPLEVEL_BINDING").split("|")
     );
@@ -99,13 +99,13 @@ RubyHighlightRules = function() {
 	            token : function(value) {
 	                if (value == "self")
 	                    return "variable.language";
-	                else if (keywords[value])
+	                else if (keywords.hasOwnProperty(value))
 	                    return "keyword";
-	                else if (buildinConstants[value])
+	                else if (buildinConstants.hasOwnProperty(value))
 	                    return "constant.language";
-                    else if (builtinVariables[value])
+                    else if (builtinVariables.hasOwnProperty(value))
                         return "variable.language";
-                    else if (builtinFunctions[value])
+                    else if (builtinFunctions.hasOwnProperty(value))
                         return "support.function";
 	                else if (value == "debugger")
 	                    return "invalid.deprecated";

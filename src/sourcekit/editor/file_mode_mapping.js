@@ -17,6 +17,8 @@ return {
         'python': { extensions: ['python', 'py'], label: 'Python' },
         'ruby': { extensions: ['rb', 'rhtml', 'erb'], label: 'Ruby' },
         'xml': { extensions: ['xml'], label: 'XML' },
+        'perl': { extensions: ['pl','perl'], label: 'Perl'},
+        'coffee': {extensions: ['coffee'], label: 'CoffeeScript'},
         'html': { extensions: ['htm','html'], label: 'HTML' },
         'javascript': { extensions: ['js'], label: 'Javascript' },
         'text': { extensions: ['*'], label: 'Plain Text' }

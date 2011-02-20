@@ -44,7 +44,6 @@ var Tokenizer = require("ace/tokenizer").Tokenizer;
 var RubyHighlightRules = require("ace/mode/ruby_highlight_rules").RubyHighlightRules;
 var MatchingBraceOutdent = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent;
 var Range = require("ace/range").Range;
-var WorkerClient = require("ace/worker/worker_client").WorkerClient;
 
 var Mode = function() {
     this.$tokenizer = new Tokenizer(new RubyHighlightRules().getRules());
@@ -70,16 +69,16 @@ oop.inherits(Mode, TextMode);
             var deleteRange = new Range(0, 0, 0, 0);
             for (var i=startRow; i<= endRow; i++)
             {
-                var line = doc.getLine(i).replace(re, "$1");
+                var line = doc.getLine(i);
+                var m = line.match(re);
                 deleteRange.start.row = i;
                 deleteRange.end.row = i;
-                deleteRange.end.column = line.length + 2;
-                doc.replace(deleteRange, line);
+                deleteRange.end.column = m[0].length;
+                doc.replace(deleteRange, m[1]);
             }
-            return -2;
         }
         else {
-            return doc.indentRows(startRow, endRow, "#");
+            doc.indentRows(startRow, endRow, "#");
         }
     };
 
@@ -109,7 +108,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.autoOutdent = function(state, doc, row) {
-        return this.$outdent.autoOutdent(doc, row);
+        this.$outdent.autoOutdent(doc, row);
     };
 
 }).call(Mode.prototype);

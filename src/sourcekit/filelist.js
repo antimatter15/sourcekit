@@ -1,6 +1,6 @@
 define("sourcekit/filelist", 
-        ["dropbox/dropbox", "sourcekit/filelist/store", "sourcekit/notification"], 
-        function(Dropbox, FileListStore, Notification) {
+        ["sourcekit/filelist/store", "sourcekit/notification"], 
+        function(FileListStore, Notification) {
 
 dojo.require("dijit.Tree");
 dojo.require("dijit.form.Button");
