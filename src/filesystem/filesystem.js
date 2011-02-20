@@ -79,10 +79,11 @@ define("filesystem/filesystem", ["dropbox/dropbox"], function(Dropbox) {
         //callback(localStorage.getItem('_file_' + (+new Date) + '___'+  path));
         callback(localStorage.getItem(getFileHash()[path].key))
       });
-      if(localStorage.getItem('_edited_'+path) && confirm("The file '"+path+"' appears to have been edited while offline, would you like to load the offline version? Otherwise the locally cached version of the file will be LOST.")){
-        return failsafe.pop()();
-      }
+      
       old_getFileContents.call(this, path, function(data){
+        if(localStorage.getItem('_edited_'+path) && confirm("The file '"+path+"' appears to have been edited while offline, would you like to load the offline version? Otherwise the locally cached version of the file will be LOST.")){
+          return failsafe.pop()();
+        }
         localStorage.setItem('_file_' + (+new Date) + '___'+  path, data);
         callback(data);
       });
